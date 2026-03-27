@@ -45,7 +45,7 @@ target-version = "py311"
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP"]
 # E501: line too long — ignorar en system prompts y archivos de agentes (strings inevitablemente largos)
-per-file-ignores = { "src/agent/*.py" = ["E501"], "src/utils/*.py" = ["E501"], "src/schemas/*.py" = ["E501"], "src/tools/*.py" = ["E501"], "tests/**/*.py" = ["E501", "E741"] }
+per-file-ignores = { "src/agent/*.py" = ["E501"], "src/utils/*.py" = ["E501"], "src/schemas/*.py" = ["E501"], "src/tools/*.py" = ["E501"], "src/fast_search.py" = ["E501"], "cli.py" = ["E501"], "tests/**/*.py" = ["E501", "E741"] }
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

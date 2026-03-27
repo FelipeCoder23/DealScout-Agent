@@ -47,6 +47,12 @@ def search(
         "-v",
         help="Mostrar informacion de progreso adicional",
     ),
+    fast: bool = typer.Option(
+        False,
+        "--fast",
+        "-f",
+        help="Busqueda rapida: solo APIs publicas, sin scraping ni agentes (~15s)",
+    ),
 ) -> None:
     """Busca el mejor precio para un producto en el mercado chileno.
 
@@ -63,13 +69,14 @@ def search(
 
         dealscout "audifonos bluetooth" -b 50000 -v
     """
-    # Validar que tenemos al menos la API key principal
-    if not os.environ.get("ANTHROPIC_API_KEY"):
+    # Modo completo requiere ANTHROPIC_API_KEY; modo fast no usa LLM
+    if not fast and not os.environ.get("ANTHROPIC_API_KEY"):
         print_error(
             "ANTHROPIC_API_KEY no configurada.\n\n"
             "1. Copia el archivo de ejemplo: cp .env.example .env\n"
             "2. Edita .env y agrega tu API key de Anthropic\n"
-            "   Obtener en: https://console.anthropic.com/"
+            "   Obtener en: https://console.anthropic.com/\n\n"
+            "Tip: usa --fast para buscar sin API key (solo APIs publicas)"
         )
         raise typer.Exit(code=1)
 
@@ -78,6 +85,8 @@ def search(
     if os.environ.get("LANGCHAIN_TRACING_V2") == "true" and os.environ.get("LANGCHAIN_API_KEY"):
         project = os.environ.get("LANGCHAIN_PROJECT", "dealscout-agent")
         console.print(f"[dim]LangSmith tracing activo → proyecto: {project}[/dim]")
+    if fast:
+        console.print("[yellow]Modo rapido[/yellow] [dim](solo APIs publicas, sin agentes)[/dim]")
     console.print(f"[dim]Producto:[/dim] [bold cyan]{product}[/bold cyan]", end="")
 
     if budget:
@@ -89,11 +98,13 @@ def search(
         print_searching_status("Iniciando agentes de busqueda...")
 
     try:
-        with console.status(
-            "[bold green]Buscando en Solotodo, MercadoLibre, Google Shopping Chile...[/bold green]",
-            spinner="dots",
-        ):
-            result = main(query=product, budget=budget)
+        spinner_msg = (
+            "[bold green]Buscando en MercadoLibre y Solotodo en paralelo...[/bold green]"
+            if fast
+            else "[bold green]Buscando en Solotodo, MercadoLibre, Google Shopping Chile...[/bold green]"
+        )
+        with console.status(spinner_msg, spinner="dots"):
+            result = main(query=product, budget=budget, fast=fast)
 
     except ValueError as e:
         print_error(str(e))
