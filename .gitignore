@@ -1,11 +1,47 @@
 __pycache__/
 .venv/
+
+# Secretos — NUNCA commitear
 .env
+*.env
+
+# Python
 *.pyc
+*.pyo
+*.pyd
+.Python
+*.py[cod]
+
+# Testing y coverage
 .pytest_cache/
 .coverage
+coverage.xml
 htmlcov/
-node_modules/
+
+# Linting
+.ruff_cache/
+.mypy_cache/
+
+# Build
 dist/
 build/
+*.egg-info/
+
+# uv
+uv.lock
+
+# OS
 .DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Output del agente
+output/
+
+# Otros
+node_modules/

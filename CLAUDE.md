@@ -1,50 +1,95 @@
 # DealScout-Agent
 
 ## Contexto
-Agente autónomo para búsqueda y comparación de ofertas de productos específicos en tiempo real.
+Agente autonomo para busqueda y comparacion de ofertas de productos en el mercado chileno.
+Construido con DeepAgents SDK (sobre LangGraph/LangChain). Corre en Docker, se ejecuta por CLI.
 
 ## Stack
 - **Lenguaje:** Python 3.11+
-- **Backend/API:** FastAPI
-- **Scraping:** Playwright / BeautifulSoup
-- **Orquestación:** LangGraph / LangChain
-- **Testing:** Pytest
-- **Linting:** Ruff / Black
+- **Agente:** DeepAgents SDK (`create_deep_agent`) sobre LangGraph
+- **LLM:** Claude Sonnet 4.6 (Anthropic)
+- **Scraping:** Firecrawl (principal) + Playwright (fallback)
+- **APIs:** Solotodo API, MercadoLibre API, SerpAPI Google Shopping
+- **CLI:** Typer + Rich
+- **Testing:** Pytest + pytest-asyncio
+- **Linting:** Ruff
+- **Package manager:** uv
 
 ## Comandos clave
 
 ```bash
-python -m venv .venv        # Crear entorno virtual
-source .venv/bin/activate   # Activar entorno (Linux/macOS)
-pip install -r requirements.txt # Instalar dependencias
-pytest                      # Correr tests
-ruff check .                # Verificar linting
+# Setup
+uv sync                          # Instalar dependencias
+uv run playwright install chromium  # Instalar Chromium
+
+# Usar el agente
+uv run python cli.py "PlayStation 5"
+uv run python cli.py "iPhone 15 128gb" --budget 800000
+uv run python cli.py "notebook gamer" --json
+
+# Docker (alternativa)
+docker compose run dealscout "PlayStation 5"
+
+# Desarrollo
+uv run pytest tests/unit/        # Tests unitarios (sin API keys)
+uv run pytest                    # Todos los tests (requiere .env)
+uv run ruff check .              # Linting
+uv run ruff format .             # Formateo
 ```
 
 ## Estructura del proyecto
 
 ```
-src/
-├── agent/          # Lógica del agente (LangGraph)
-├── scrapers/       # Módulos de scraping por sitio
-├── schemas/        # Modelos Pydantic
-├── utils/          # Helpers
-└── tests/          # Tests unitarios e integración
-docs/
-├── PROJECT-SPEC.md # Especificación del proyecto
-└── API.md          # Documentación de la API (si aplica)
+dealscout-agent/
+├── cli.py                   # Entry point CLI (Typer)
+├── pyproject.toml           # Dependencias y config (uv)
+├── .env.example             # Variables de entorno requeridas
+├── Dockerfile               # Imagen Docker con Playwright/Chromium
+├── docker-compose.yml
+├── src/
+│   ├── agent/
+│   │   ├── master.py        # create_dealscout_agent() - agente principal
+│   │   ├── searcher.py      # Subagente: busqueda en APIs
+│   │   ├── scraper.py       # Subagente: extraccion de paginas
+│   │   └── comparator.py    # Subagente: analisis y recomendacion
+│   ├── tools/
+│   │   ├── solotodo.py      # Tool: Solotodo API (electronica CL)
+│   │   ├── mercadolibre.py  # Tool: MercadoLibre API
+│   │   ├── serpapi_shopping.py  # Tool: Google Shopping Chile
+│   │   ├── firecrawl_extract.py # Tool: extraccion web estructurada
+│   │   ├── playwright_scraper.py # Tool: navegador headless (fallback)
+│   │   └── knasta.py        # Tool: historial de precios (Knasta.cl)
+│   ├── schemas/
+│   │   ├── product.py       # ProductListing, DealResult, PriceHistory
+│   │   └── search.py        # SearchQuery, SearchResult
+│   └── utils/
+│       ├── price.py         # Normalizacion CLP, calculos de descuento
+│       └── output.py        # Formateo Rich para terminal
+├── tests/
+│   ├── unit/                # Tests sin API keys (rapidos)
+│   └── integration/         # Tests con API keys reales (marcados @integration)
+└── docs/
+    ├── LANGGRAPH_GUIDE.md   # Documentacion DeepAgents/LangGraph
+    ├── WEB_BROWSING_RESEARCH.md  # Research APIs y scraping
+    └── PROJECT-SPEC.md
 ```
-
-## Reglas de código
-
-- Python con tipado estricto (Type Hints)
-- Tests obligatorios para scrapers y lógica de agente
-- Conventional commits (feat:, fix:, refactor:)
-- Docstrings en funciones principales
 
 ## Variables de entorno
 
-```env
-# [Agregar API keys de ser necesario, e.g., OpenAI/Anthropic para el agente]
-ANTHROPIC_API_KEY=
-```
+| Variable | Requerida | Descripcion |
+|----------|-----------|-------------|
+| `ANTHROPIC_API_KEY` | **Si** | API key de Claude |
+| `TAVILY_API_KEY` | Recomendada | Busqueda web (1000 creditos/mes gratis) |
+| `SERPAPI_KEY` | Recomendada | Google Shopping Chile (250/mes gratis) |
+| `FIRECRAWL_API_KEY` | Recomendada | Extraccion web ($16/mes) |
+| `MERCADOLIBRE_ACCESS_TOKEN` | No | OAuth avanzado ML (busquedas basicas no lo requieren) |
+| `DEALSCOUT_MODEL` | No | Modelo a usar (default: anthropic:claude-sonnet-4-6) |
+
+## Reglas de codigo
+
+- Python con tipado estricto (Type Hints en todo — parametros y retorno)
+- Docstrings en funciones principales (especialmente en @tool — el LLM los lee)
+- Tests obligatorios para tools y logica de agente
+- Conventional commits: `feat:`, `fix:`, `refactor:`, `docs:`
+- Precios chilenos: siempre `int` en CLP, punto como separador de miles ($149.990)
+- Tools nunca lanzan excepciones — manejan errores internamente y retornan lista vacia

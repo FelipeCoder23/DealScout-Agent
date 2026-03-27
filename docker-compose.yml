@@ -1,0 +1,37 @@
+services:
+  dealscout:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    image: dealscout-agent:latest
+
+    # Necesario para Chromium (shared memory)
+    ipc: host
+
+    # Previene procesos zombie de Playwright/Chromium
+    init: true
+
+    # Variables de entorno desde .env (crear con: cp .env.example .env)
+    env_file:
+      - .env
+
+    # Volume para exportar resultados JSON
+    volumes:
+      - ./output:/app/output
+
+    # Sin puertos — es CLI, no servidor
+
+# Uso:
+#
+#   Busqueda basica:
+#   docker compose run --rm dealscout "PlayStation 5"
+#
+#   Con presupuesto:
+#   docker compose run --rm dealscout "iPhone 15 128gb" --budget 800000
+#
+#   Output JSON:
+#   docker compose run --rm dealscout "notebook gamer" --json
+#
+#   Verbose:
+#   docker compose run --rm dealscout "audifonos bluetooth" --verbose
