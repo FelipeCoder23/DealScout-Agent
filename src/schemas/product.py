@@ -103,8 +103,8 @@ class DealResult(BaseModel):
 
     query: str = Field(description="Busqueda original del usuario")
     best_deal: ProductListing = Field(description="La mejor opcion recomendada")
-    alternatives: Annotated[list[ProductListing], Field(min_length=1, max_length=5)] = Field(
-        description="Alternativas ordenadas de mejor a peor (minimo 1, maximo 5)"
+    alternatives: Annotated[list[ProductListing], Field(min_length=1, max_length=9)] = Field(
+        description="Alternativas ordenadas de mejor a peor (minimo 1, maximo 9)"
     )
     price_history: PriceHistory | None = Field(
         default=None,

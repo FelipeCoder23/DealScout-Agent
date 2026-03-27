@@ -10,6 +10,15 @@ from src.utils.price import calculate_discount, format_clp
 console = Console()
 
 
+def _format_duration(seconds: float) -> str:
+    """Formatea una duracion en segundos a formato legible (ej: '2m 34s', '45s')."""
+    total = int(seconds)
+    if total < 60:
+        return f"{total}s"
+    minutes, secs = divmod(total, 60)
+    return f"{minutes}m {secs:02d}s"
+
+
 def print_deal_result(result: DealResult) -> None:
     """Imprime el resultado final de DealScout en formato bonito con Rich.
 
@@ -63,7 +72,6 @@ def print_deal_result(result: DealResult) -> None:
         table.add_column("Precio", style="green", justify="right", min_width=12)
         table.add_column("Diferencia", justify="right", min_width=10)
         table.add_column("Envio", style="blue", min_width=14)
-        table.add_column("Link", style="dim underline", max_width=40, overflow="fold")
 
         for i, alt in enumerate(result.alternatives, 1):
             diff = alt.price - best.price
@@ -78,10 +86,14 @@ def print_deal_result(result: DealResult) -> None:
                 format_clp(alt.price),
                 diff_str,
                 alt.shipping_info or "No informado",
-                alt.url,
             )
 
         console.print(table)
+
+        # Links completos como lista numerada (sin truncar)
+        console.print("\n[dim bold]Links alternativas:[/dim bold]")
+        for i, alt in enumerate(result.alternatives, 1):
+            console.print(f"  [dim]{i}.[/dim] [dim underline]{alt.url}[/dim underline]")
 
     # ─── Historial de precios ─────────────────────────────────────────────────
     if result.price_history:
@@ -98,9 +110,10 @@ def print_deal_result(result: DealResult) -> None:
             )
 
     # ─── Footer ───────────────────────────────────────────────────────────────
+    duration_str = _format_duration(result.search_duration_seconds)
     console.print(f"\n[dim]Fuentes consultadas: {', '.join(result.sources_consulted)}[/dim]")
     console.print(
-        f"[dim]Busqueda completada en {result.search_duration_seconds:.1f}s "
+        f"[dim]Busqueda completada en {duration_str} "
         f"({result.total_results_found} resultados encontrados)[/dim]\n"
     )
 

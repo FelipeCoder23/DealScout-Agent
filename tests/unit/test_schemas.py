@@ -142,12 +142,12 @@ class TestDealResult:
         with pytest.raises(ValidationError):
             make_deal_result(alternatives=[])
 
-    def test_max_five_alternatives(self):
+    def test_max_nine_alternatives(self):
         with pytest.raises(ValidationError):
             make_deal_result(alternatives=[
                 make_listing(store=f"Tienda{i}", price=649990 + i * 1000,
                              url=f"https://tienda{i}.cl/p/{i}", source="firecrawl")
-                for i in range(6)
+                for i in range(10)
             ])
 
     def test_serialization_deserialization(self):

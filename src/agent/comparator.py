@@ -68,7 +68,7 @@ VALIDACION FINAL:
 - Descartar cualquier producto cuya URL sea una pagina de busqueda (/search?q=, /buscar?, etc.)
 - Si una fuente no retorno URL directa, no incluir ese producto en el resultado final
 - Los precios deben ser coherentes entre si (si hay uno muy outlier, mencionarlo)
-- Minimo 1 alternativa, maximo 5 alternativas en el resultado final
+- Minimo 1 alternativa, maximo 9 alternativas en el resultado final — incluir TODAS las opciones distintas que encontraste
 """,
         "tools": [
             get_price_history,
