@@ -4,6 +4,8 @@ import os
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
+from langsmith import traceable
+
 from src.schemas.product import DealResult, ProductListing
 from src.tools.mercadolibre import search_mercadolibre
 from src.tools.serpapi_shopping import search_google_shopping_chile
@@ -11,6 +13,7 @@ from src.tools.solotodo import search_solotodo
 from src.utils.price import compare_prices, format_clp
 
 
+@traceable(name="dealscout-fast-search")
 def run_fast_search(query: str, max_budget: int | None = None) -> DealResult:
     """Busqueda rapida: APIs en paralelo + ranking programatico, sin LLM.
 
